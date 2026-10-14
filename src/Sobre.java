@@ -1,5 +1,3 @@
-package modelo;
-
 public final class Sobre extends Envio {
 
     public Sobre(

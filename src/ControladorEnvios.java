@@ -1,15 +1,4 @@
-package controlador;
-
 import java.util.List;
-import modelo.CargaRefrigerada;
-import modelo.Despacho;
-import modelo.Envio;
-import modelo.Paquete;
-import modelo.SistemaEnvios;
-import modelo.Sobre;
-import modelo.TipoDestino;
-import modelo.Vehiculo;
-import vista.VistaConsola;
 
 public final class ControladorEnvios {
     private final SistemaEnvios sistema;

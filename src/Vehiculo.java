@@ -1,5 +1,3 @@
-package modelo;
-
 public final class Vehiculo {
     private final String placa;
     private final double capacidadMaximaKg;

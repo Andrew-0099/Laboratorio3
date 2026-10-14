@@ -1,12 +1,6 @@
-package vista;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import modelo.Despacho;
-import modelo.Envio;
-import modelo.EstadoEnvio;
-import modelo.Vehiculo;
 
 public final class VistaConsola {
     private final Scanner scanner = new Scanner(System.in);

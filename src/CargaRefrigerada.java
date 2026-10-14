@@ -1,5 +1,3 @@
-package modelo;
-
 public final class CargaRefrigerada extends Envio {
     private final double temperaturaRequerida;
 

@@ -1,14 +1,5 @@
-import controlador.ControladorEnvios;
-import modelo.CargaRefrigerada;
-import modelo.Paquete;
-import modelo.SistemaEnvios;
-import modelo.Sobre;
-import modelo.TipoDestino;
-import modelo.Vehiculo;
-import vista.VistaConsola;
-
-public final class Aplicacion {
-    private Aplicacion() {
+public final class Main {
+    private Main() {
     }
 
     public static void main(String[] args) {
