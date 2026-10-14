@@ -3,12 +3,14 @@ package pruebas;
 import modelo.CargaRefrigerada;
 import modelo.Despacho;
 import modelo.Envio;
+import modelo.EstadoDespacho;
 import modelo.EstadoEnvio;
 import modelo.Paquete;
 import modelo.SistemaEnvios;
 import modelo.Sobre;
 import modelo.TipoDestino;
 import modelo.Vehiculo;
+import java.util.Map;
 
 public final class PruebasSistema {
     private static int ejecutadas;
@@ -20,6 +22,8 @@ public final class PruebasSistema {
         probarRestriccionesDeDespacho();
         probarIntentosEIngresos();
         probarOperacionesSinIngreso();
+        probarValidacionesDeEntrada();
+        probarEstadosYReportes();
         System.out.printf("%n%d verificaciones completadas correctamente.%n", ejecutadas);
     }
 
@@ -116,6 +120,76 @@ public final class PruebasSistema {
         sistema.asignarEnvio(despacho, envio);
         sistema.retirarEnvio(despacho, envio);
         verificar("Retiro no altera ingresos", 20, sistema.getIngresoTotal());
+    }
+
+    private static void probarValidacionesDeEntrada() {
+        esperarError("Código vacío", () -> new Sobre(
+                "  ", "A", "B", 0.2, TipoDestino.URBANO));
+        esperarError("Peso no positivo", () -> new Sobre(
+                "S", "A", "B", 0, TipoDestino.URBANO));
+        esperarError("Sobre mayor de 0.5 kg", () -> new Sobre(
+                "S", "A", "B", 0.6, TipoDestino.URBANO));
+        esperarError("Dimensión no positiva", () -> new Paquete(
+                "P", "A", "B", 1, TipoDestino.URBANO,
+                0, 10, 10, false, 0));
+        esperarError("Valor declarado no positivo", () -> new Paquete(
+                "F", "A", "B", 1, TipoDestino.URBANO,
+                10, 10, 10, true, 0));
+        esperarError("Temperatura fuera de rango", () -> new CargaRefrigerada(
+                "R", "A", "B", 1, TipoDestino.URBANO, -26));
+        esperarError("Refrigerada departamental", () -> new CargaRefrigerada(
+                "R", "A", "B", 1, TipoDestino.DEPARTAMENTAL, 4));
+        esperarError("Capacidad no positiva", () -> new Vehiculo("V", 0, false));
+
+        SistemaEnvios sistema = new SistemaEnvios();
+        sistema.registrarVehiculo(new Vehiculo("V1", 10, false));
+        esperarError("Placa repetida", () -> sistema.registrarVehiculo(
+                new Vehiculo("V1", 20, true)));
+        verificar("Placa rechazada no se agrega", 1, sistema.getVehiculos().size());
+    }
+
+    private static void probarEstadosYReportes() {
+        SistemaEnvios sistema = new SistemaEnvios();
+        Envio envio = new Sobre("S1", "A", "B", 0.2, TipoDestino.URBANO);
+        Envio pendiente = new Sobre("S2", "C", "D", 0.3, TipoDestino.URBANO);
+        Vehiculo vehiculo = new Vehiculo("V1", 10, false);
+        sistema.registrarEnvio(envio);
+        sistema.agregarEnvioInicial(pendiente);
+        sistema.registrarVehiculo(vehiculo);
+
+        Despacho despacho = sistema.crearDespacho(vehiculo);
+        verificar("Despacho inicia en preparación", EstadoDespacho.PREPARACION,
+                despacho.getEstado());
+        verificar("Despacho aparece activo", 1, sistema.getDespachosActivos().size());
+        esperarError("Despacho vacío no sale", () -> sistema.salirDespacho(despacho));
+        verificar("Salida rechazada no cobra", 20, sistema.getIngresoTotal());
+        esperarError("Vehículo ocupado", () -> sistema.crearDespacho(vehiculo));
+
+        sistema.asignarEnvio(despacho, envio);
+        verificar("Asignación cambia estado", EstadoEnvio.ASIGNADO, envio.getEstado());
+        esperarError("Asignación duplicada", () -> sistema.asignarEnvio(despacho, envio));
+        sistema.asignarEnvio(despacho, pendiente);
+        sistema.salirDespacho(despacho);
+        verificar("Salida cambia despacho", EstadoDespacho.EN_RUTA, despacho.getEstado());
+        verificar("Salida cambia envío", EstadoEnvio.EN_RUTA, envio.getEstado());
+        sistema.registrarResultado(despacho, envio, true);
+        verificar("Entrega exitosa", EstadoEnvio.ENTREGADO, envio.getEstado());
+        verificar("Despacho espera resultados", EstadoDespacho.EN_RUTA, despacho.getEstado());
+        esperarError("Resultado duplicado", () -> sistema.registrarResultado(
+                despacho, envio, true));
+        sistema.registrarResultado(despacho, pendiente, true);
+        verificar("Despacho cierra", EstadoDespacho.CERRADO, despacho.getEstado());
+        verificar("Vehículo queda libre", true, vehiculo.isDisponible());
+        verificar("Cerrado deja de estar activo", 0, sistema.getDespachosActivos().size());
+        Map<EstadoEnvio, Integer> conteoSobre = sistema.generarReportes().get("Sobre");
+        verificar("Reporte entregados", 2,
+                conteoSobre.get(EstadoEnvio.ENTREGADO).intValue());
+        verificar("Reporte en bodega", 0,
+                conteoSobre.get(EstadoEnvio.BODEGA).intValue());
+        verificar("Reporte incluye estado en cero", 0,
+                conteoSobre.get(EstadoEnvio.DEVUELTO).intValue());
+        verificar("Ingreso por categoría", 20,
+                sistema.getIngresosPorCategoria().get("Sobre").doubleValue());
     }
 
     private static void esperarError(String caso, Runnable operacion) {
