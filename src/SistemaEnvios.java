@@ -136,10 +136,18 @@ public final class SistemaEnvios {
         Map<String, Map<EstadoEnvio, Integer>> conteos = new LinkedHashMap<>();
         for (Envio envio : envios.values()) {
             Map<EstadoEnvio, Integer> porEstado = conteos.computeIfAbsent(
-                    envio.getCategoria(), clave -> new EnumMap<>(EstadoEnvio.class));
+                    envio.getCategoria(), clave -> crearConteoVacio());
             porEstado.merge(envio.getEstado(), 1, Integer::sum);
         }
-        return conteos;
+        Map<String, Map<EstadoEnvio, Integer>> resultado = new LinkedHashMap<>();
+        for (Map.Entry<String, Map<EstadoEnvio, Integer>> entrada : conteos.entrySet()) {
+            resultado.put(entrada.getKey(), Collections.unmodifiableMap(entrada.getValue()));
+        }
+        return Collections.unmodifiableMap(resultado);
+    }
+
+    public Map<String, Map<EstadoEnvio, Integer>> generarReportes() {
+        return getConteos();
     }
 
     public Map<String, Double> getIngresosPorCategoria() {
@@ -184,5 +192,13 @@ public final class SistemaEnvios {
             throw new IllegalArgumentException("El " + campo + " no puede estar vacío.");
         }
         return valor.trim();
+    }
+
+    private static Map<EstadoEnvio, Integer> crearConteoVacio() {
+        Map<EstadoEnvio, Integer> conteo = new EnumMap<>(EstadoEnvio.class);
+        for (EstadoEnvio estado : EstadoEnvio.values()) {
+            conteo.put(estado, 0);
+        }
+        return conteo;
     }
 }
