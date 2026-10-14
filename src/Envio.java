@@ -1,5 +1,3 @@
-package modelo;
-
 public abstract class Envio {
     private final String codigo;
     private final String remitente;

@@ -1,5 +1,3 @@
-package modelo;
-
 public final class Paquete extends Envio {
     private final double largoCm;
     private final double anchoCm;
