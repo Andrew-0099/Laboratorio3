@@ -6,6 +6,7 @@
 **Nombre completo:** Andrés Martínez Torres
 **Carné:** 26633
 
+## Descripción
 Aplicación de consola en Java para administrar los envíos, vehículos, despachos e ingresos de
 EnvíaGT. La solución usa herencia y polimorfismo para las reglas de sobres, paquetes,
 paquetes frágiles y cargas refrigeradas.
